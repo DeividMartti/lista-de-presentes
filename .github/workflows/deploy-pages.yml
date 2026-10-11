@@ -30,8 +30,6 @@ jobs:
       - name: Gerar o site
         run: npm run build
         env:
-          VITE_SUPABASE_URL: https://zjliptkgaoqyeplrdodw.supabase.co
-          VITE_SUPABASE_ANON_KEY: sb_publishable_ijfFae9baIN7y5Sh9PdDRQ_G3qmK5Ec
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - name: Preparar publicação do Pages
         uses: actions/configure-pages@v5
