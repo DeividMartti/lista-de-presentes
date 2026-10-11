@@ -20,7 +20,7 @@ Site estático de lista de presentes para GitHub Pages, com catálogo, painel ad
    ```
 
    Execute e confirme que uma linha foi inserida ou atualizada.
-4. O workflow já usa a URL e a chave pública `publishable` do projeto Supabase. Se preferir, você pode substituí-las em **Settings → Secrets and variables → Actions** criando os segredos `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+4. O workflow `.github/workflows/deploy-pages.yml` já contém a URL e a chave pública `publishable` do projeto Supabase; não é necessário cadastrar segredos no GitHub.
 5. Em **Settings → Pages**, selecione **GitHub Actions** como origem da publicação.
 6. Envie as alterações para a branch `main`. O workflow `.github/workflows/deploy-pages.yml` compila e publica o site.
 
