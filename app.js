@@ -280,6 +280,15 @@ class GerenciadorDados {
     if (error) throw error;
   }
 
+  async excluirReservaCancelada(reservaId) {
+    const { data, error } = await this.clienteSupabase
+      .rpc("delete_cancelled_reservation", {
+        p_reservation_id: String(reservaId)
+      });
+    if (error) throw error;
+    if (!data) throw new Error("A reserva não foi encontrada ou ainda está ativa.");
+  }
+
 }
 
 // Instância global única
@@ -872,7 +881,11 @@ class PainelAdmin {
               <button type="button" class="btn-editar-dado" style="color: var(--terracota);" onclick="window.appAdmin.cancelarReserva('${r.id}')">
                 Cancelar Reserva
               </button>
-            ` : ''}
+            ` : `
+              <button type="button" class="btn-editar-dado" style="color: var(--terracota);" onclick="window.appAdmin.excluirReservaCancelada('${r.id}')">
+                Excluir registro
+              </button>
+            `}
           </div>
         </div>
       `;
@@ -892,6 +905,19 @@ class PainelAdmin {
     await window.appFluxo.carregarCatalogo();
     await this.carregarReservas();
     await this.carregarDashboard();
+  }
+
+  async excluirReservaCancelada(resId) {
+    if (!confirm("Deseja excluir permanentemente este registro de reserva cancelada?")) return;
+    try {
+      await DB.excluirReservaCancelada(resId);
+      window.appFluxo.mostrarToast("Registro da reserva excluído.");
+      await this.carregarReservas();
+      await this.carregarDashboard();
+    } catch (error) {
+      console.error("Falha ao excluir reserva cancelada no Supabase:", error);
+      window.appFluxo.mostrarToast(error.message || "Não foi possível excluir o registro.");
+    }
   }
 
   // --- MODAL DE PRESENTES ---

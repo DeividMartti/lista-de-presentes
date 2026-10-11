@@ -300,6 +300,50 @@ $$;
 REVOKE ALL ON FUNCTION public.cancel_guest_reservation(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.cancel_guest_reservation(TEXT) TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.delete_cancelled_reservation(p_reservation_id TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  reservation_row public.reservations%ROWTYPE;
+BEGIN
+  IF NOT public.is_site_admin() THEN
+    RAISE EXCEPTION 'Acesso não autorizado.';
+  END IF;
+
+  SELECT * INTO reservation_row
+  FROM public.reservations
+  WHERE id = p_reservation_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN false;
+  END IF;
+  IF reservation_row.status <> 'cancelled' THEN
+    RAISE EXCEPTION 'Somente reservas canceladas podem ser excluídas.';
+  END IF;
+
+  DELETE FROM public.reservations WHERE id = p_reservation_id;
+
+  UPDATE public.gifts
+  SET reserved = EXISTS (
+        SELECT 1 FROM public.reservations
+        WHERE gift_id = reservation_row.gift_id AND status = 'active'
+      ),
+      is_reserved = EXISTS (
+        SELECT 1 FROM public.reservations
+        WHERE gift_id = reservation_row.gift_id AND status = 'active'
+      ),
+      updated_at = now()
+  WHERE id = reservation_row.gift_id;
+
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.delete_cancelled_reservation(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.delete_cancelled_reservation(TEXT) TO authenticated;
+
 -- Criar configurações padrão do site (passando user_id 'admin' explicitamente para evitar erros de NOT NULL)
 INSERT INTO public.site_settings (id, user_id, site_title, hero_title, hero_description, hero_image_url)
 VALUES (1, 'admin', 'Nosso Novo Lar', 'Vamos construir esse novo capítulo juntos? 💚', 'Estamos começando uma nova etapa e montando nosso cantinho com muito carinho.', './imagens/imagem-da-capa.png')

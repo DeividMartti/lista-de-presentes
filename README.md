@@ -31,6 +31,7 @@ O site é público, então a URL e a chave `publishable` também ficam visíveis
 - Os convidados leem o catálogo e criam reservas no mesmo Supabase.
 - Somente uma conta autenticada no Supabase Auth e vinculada à tabela `profiles` pode alterar presentes, configurações ou consultar reservas.
 - A criação de reserva é feita por uma função SQL transacional: o presente não pode ser reservado duas vezes ao mesmo tempo.
+- Reservas canceladas podem ser removidas permanentemente do histórico pelo painel; somente o administrador pode apagá-las, e reservas ativas não podem ser excluídas por essa ação.
 - O site não confirma a reserva se o Supabase rejeitar a gravação; o erro é exibido para o visitante.
 - O projeto não grava mais credenciais Supabase nem cópias de reservas/presentes no armazenamento local do navegador.
 
