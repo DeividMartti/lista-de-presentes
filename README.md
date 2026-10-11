@@ -20,13 +20,11 @@ Site estático de lista de presentes para GitHub Pages, com catálogo, painel ad
    ```
 
    Execute e confirme que uma linha foi inserida ou atualizada.
-4. No GitHub, abra **Settings → Secrets and variables → Actions → New repository secret** e crie:
-   - `VITE_SUPABASE_URL`: URL do projeto Supabase.
-   - `VITE_SUPABASE_ANON_KEY`: chave pública `anon` do projeto.
+4. O workflow já usa a URL e a chave pública `publishable` do projeto Supabase. Se preferir, você pode substituí-las em **Settings → Secrets and variables → Actions** criando os segredos `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 5. Em **Settings → Pages**, selecione **GitHub Actions** como origem da publicação.
 6. Envie as alterações para a branch `main`. O workflow `.github/workflows/deploy-pages.yml` compila e publica o site.
 
-O workflow precisa desses dois segredos para gerar a publicação. A chave `anon`/pública é usada no navegador e é protegida pelas políticas RLS do SQL. **Nunca** use `service_role` ou qualquer chave secreta no site, no `.env` com prefixo `VITE_` ou no GitHub Pages.
+O site é público, então a URL e a chave `publishable` também ficam visíveis no código e no navegador; essa chave é destinada ao uso público e depende das políticas RLS do SQL. **Nunca** use `service_role` ou qualquer chave secreta no site, no `.env` com prefixo `VITE_` ou no GitHub Pages.
 
 ## Funcionamento e segurança
 
