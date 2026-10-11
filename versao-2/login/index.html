@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área Administrativa — Lista de Presentes</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <!-- Estilos Centralizados Unificados -->
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body id="pagina-admin">
+
+  <!-- ========================================================================
+       1. TELA DE LOGIN (EXIBIDA QUANDO NÃO AUTENTICADO)
+       ======================================================================== -->
+  <div id="tela-login" class="admin-tela-login">
+    <div class="login-card">
+      <div class="login-cabecalho">
+        <svg class="login-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <h1 class="login-titulo titulo-serif">Área dos Anfitriões</h1>
+        <p class="login-subtitulo">Acesse o painel para gerenciar os presentes e acompanhar as reservas.</p>
+      </div>
+
+      <form id="form-login">
+        <div class="form-grupo" style="margin-bottom: 16px;">
+          <label for="login-usuario" class="form-rotulo">Usuário ou E-mail</label>
+          <input 
+            type="text" 
+            id="login-usuario" 
+            class="form-campo" 
+            placeholder="Seu usuário de administrador"
+            required 
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="form-grupo" style="margin-bottom: 24px;">
+          <label for="login-senha" class="form-rotulo">Senha</label>
+          <input 
+            type="password" 
+            id="login-senha" 
+            class="form-campo" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primario" id="btn-login-entrar" style="width: 100%;">
+          Entrar no Painel
+        </button>
+
+        <div class="login-credencial-dica">
+          <span style="font-size: 0.76rem; color: var(--cor-texto-mutado);">O acesso é definido nas variáveis seguras do servidor. Não existe senha padrão.</span>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="../" class="btn btn-secundario btn-sm">
+            &larr; Voltar para a Lista Pública
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. TELA DO PAINEL ADMINISTRATIVO (EXIBIDA APÓS O LOGIN)
+       ======================================================================== -->
+  <div id="tela-painel" class="admin-layout" style="display: none;">
+    
+    <!-- Topo Administrativo -->
+    <header class="admin-topo">
+      <div class="container admin-topo-bar">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <a href="../" target="_blank" class="topo-marca" style="font-size: 1.15rem;" title="Ver site público">
+            <svg class="topo-marca-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Painel de Presentes</span>
+          </a>
+        </div>
+
+        <!-- Abas de Navegação -->
+        <nav class="admin-abas" aria-label="Navegação do painel">
+          <button type="button" class="admin-aba-btn ativa" data-aba="visao-geral">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Visão Geral
+          </button>
+          <button type="button" class="admin-aba-btn" data-aba="presentes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            Presentes
+          </button>
+          <button type="button" class="admin-aba-btn" data-aba="reservas">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Reservas
+          </button>
+          <button type="button" class="admin-aba-btn" data-aba="personalizacao">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Personalização
+          </button>
+          <button type="button" class="admin-aba-btn" data-aba="supabase">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            Supabase & SQL
+          </button>
+          <button type="button" class="admin-aba-btn" data-aba="conta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Minha Conta
+          </button>
+        </nav>
+
+        <!-- Botão Logout -->
+        <div>
+          <button type="button" class="btn btn-perigo-suave btn-sm" id="btn-admin-logout">
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal do Painel -->
+    <main class="admin-conteudo">
+      <div class="container">
+
+        <!-- ====================================================================
+             ABA 1: VISÃO GERAL (DASHBOARD)
+             ==================================================================== -->
+        <section id="secao-visao-geral" class="admin-secao ativa">
+          <div style="margin-bottom: 24px;">
+            <h2 class="titulo-serif" style="font-size: 1.8rem;">Visão Geral da Lista</h2>
+            <p style="color: var(--cor-texto-suave);">Acompanhe o andamento dos presentes escolhidos pelos seus convidados.</p>
+          </div>
+
+          <!-- Grade de Métricas -->
+          <div class="metricas-grid">
+            <div class="metrica-card">
+              <span class="metrica-card-rotulo">Total de Presentes</span>
+              <span class="metrica-card-valor" id="dash-total">0</span>
+              <span class="metrica-card-desc">Itens cadastrados</span>
+            </div>
+            <div class="metrica-card">
+              <span class="metrica-card-rotulo">Disponíveis</span>
+              <span class="metrica-card-valor" style="color: var(--cor-disponivel);" id="dash-disponiveis">0</span>
+              <span class="metrica-card-desc">Ainda livres para escolha</span>
+            </div>
+            <div class="metrica-card">
+              <span class="metrica-card-rotulo">Presentes Escolhidos</span>
+              <span class="metrica-card-valor" style="color: var(--cor-terrosa);" id="dash-reservados">0</span>
+              <span class="metrica-card-desc">Reservados por amigos</span>
+            </div>
+            <div class="metrica-card">
+              <span class="metrica-card-rotulo">Participantes Únicos</span>
+              <span class="metrica-card-valor" id="dash-participantes">0</span>
+              <span class="metrica-card-desc">Pessoas que presentearam</span>
+            </div>
+            <div class="metrica-card">
+              <span class="metrica-card-rotulo">Percentual Escolhido</span>
+              <span class="metrica-card-valor" id="dash-percentual">0%</span>
+              <span class="metrica-card-desc">Meta da lista</span>
+            </div>
+          </div>
+
+          <!-- Barra de Progresso CSS -->
+          <div class="progresso-bloco">
+            <div class="progresso-cabecalho">
+              <strong style="font-size: 0.95rem;">Progresso da Lista de Presentes</strong>
+              <span style="font-size: 0.85rem; color: var(--cor-texto-suave);">Meta da casa nova</span>
+            </div>
+            <div class="progresso-trilho">
+              <div class="progresso-preenchimento" id="dash-barra-progresso" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Reservas Recentes -->
+          <div>
+            <h3 class="titulo-serif" style="font-size: 1.3rem; margin-bottom: 14px;">Reservas Recentes</h3>
+            <div class="painel-tabela-embrulho">
+              <table class="painel-tabela">
+                <thead>
+                  <tr>
+                    <th>Presente</th>
+                    <th>Convidado</th>
+                    <th>WhatsApp</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-reservas-recentes">
+                  <!-- Gerado dinamicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             ABA 2: GERENCIAMENTO DE PRESENTES
+             ==================================================================== -->
+        <section id="secao-presentes" class="admin-secao">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <h2 class="titulo-serif" style="font-size: 1.8rem;">Catálogo de Presentes</h2>
+              <p style="color: var(--cor-texto-suave);">Cadastre novos itens, edite descrições ou altere imagens.</p>
+            </div>
+            <button type="button" class="btn btn-primario" id="btn-novo-presente">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Adicionar Novo Presente
+            </button>
+          </div>
+
+          <div class="painel-tabela-embrulho">
+            <table class="painel-tabela">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Nome do Objeto</th>
+                  <th>Categoria</th>
+                  <th>Disponibilidade</th>
+                  <th style="text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-presentes-corpo">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             ABA 3: GERENCIAMENTO DE RESERVAS
+             ==================================================================== -->
+        <section id="secao-reservas" class="admin-secao">
+          <div style="margin-bottom: 24px;">
+            <h2 class="titulo-serif" style="font-size: 1.8rem;">Todas as Reservas</h2>
+            <p style="color: var(--cor-texto-suave);">Consulte quem reservou cada item, fale pelo WhatsApp ou cancele se necessário.</p>
+          </div>
+
+          <div class="painel-tabela-embrulho">
+            <table class="painel-tabela">
+              <thead>
+                <tr>
+                  <th>Presente</th>
+                  <th>Convidado e Mensagem</th>
+                  <th>WhatsApp</th>
+                  <th>Data e Hora</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-reservas-corpo">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             ABA 4: PERSONALIZAÇÃO DO SITE
+             ==================================================================== -->
+        <section id="secao-personalizacao" class="admin-secao">
+          <div style="margin-bottom: 24px;">
+            <h2 class="titulo-serif" style="font-size: 1.8rem;">Personalização da Página Pública</h2>
+            <p style="color: var(--cor-texto-suave);">Personalize os textos, nomes e imagem da página inicial sem mexer no código HTML.</p>
+          </div>
+
+          <div style="background-color: var(--cor-superficie); padding: 32px; border-radius: var(--raio-lg); border: 1px solid var(--cor-borda); max-width: 740px;">
+            <form id="form-personalizacao">
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-titulo-pagina" class="form-rotulo">Título da Aba / Navegador</label>
+                <input type="text" id="cfg-titulo-pagina" class="form-campo" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-nome-casal" class="form-rotulo">Nome dos Anfitriões ou Casal</label>
+                <input type="text" id="cfg-nome-casal" class="form-campo" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-hero-frase" class="form-rotulo">Frase Introdutória (Kicker)</label>
+                <input type="text" id="cfg-hero-frase" class="form-campo" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-hero-titulo" class="form-rotulo">Título Principal (Hero)</label>
+                <input type="text" id="cfg-hero-titulo" class="form-campo" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-hero-descricao" class="form-rotulo">Texto de Apresentação</label>
+                <textarea id="cfg-hero-descricao" class="form-campo" rows="4" required></textarea>
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="cfg-hero-imagem" class="form-rotulo">Imagem de Capa (Caminho local ou URL externa)</label>
+                <input type="text" id="cfg-hero-imagem" class="form-campo" placeholder="./imagens/capa.jpg" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 24px;">
+                <label for="cfg-agradecimento" class="form-rotulo">Mensagem de Agradecimento Final</label>
+                <textarea id="cfg-agradecimento" class="form-campo" rows="3" required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primario">
+                Salvar Alterações
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             ABA 5: SUPABASE & SQL SETUP
+             ==================================================================== -->
+        <section id="secao-supabase" class="admin-secao">
+          <div style="margin-bottom: 24px;">
+            <h2 class="titulo-serif" style="font-size: 1.8rem;">Conexão com Supabase</h2>
+            <p style="color: var(--cor-texto-suave);">Configure seu projeto na nuvem para sincronização em tempo real entre todos os dispositivos.</p>
+          </div>
+
+          <!-- Status Atual -->
+          <div style="margin-bottom: 24px;" id="supabase-status-badge"></div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+            <!-- Formulário de Chaves -->
+            <div style="background-color: var(--cor-superficie); padding: 28px; border-radius: var(--raio-lg); border: 1px solid var(--cor-borda);">
+              <h3 style="margin-bottom: 14px;">Chaves do Projeto</h3>
+              <form id="form-supabase">
+                <div class="form-grupo" style="margin-bottom: 16px;">
+                  <label for="cfg-supabase-url" class="form-rotulo">Project URL</label>
+                  <input type="url" id="cfg-supabase-url" class="form-campo" placeholder="https://seu-projeto.supabase.co" />
+                </div>
+                <div class="form-grupo" style="margin-bottom: 20px;">
+                  <label for="cfg-supabase-key" class="form-rotulo">Anon Public Key</label>
+                  <input type="text" id="cfg-supabase-key" class="form-campo" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+                  <span class="form-ajuda">Nunca utilize a chave 'service_role' secreta no navegador. Utilize somente a chave 'anon' pública.</span>
+                </div>
+                <button type="submit" class="btn btn-primario">Salvar e Conectar</button>
+              </form>
+            </div>
+
+            <!-- Como rodar o SQL -->
+            <div style="background-color: var(--cor-superficie); padding: 28px; border-radius: var(--raio-lg); border: 1px solid var(--cor-borda);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <h3>Script SQL de Criação das Tabelas</h3>
+                <button type="button" class="btn btn-secundario btn-sm" id="btn-copiar-sql">Copiar SQL</button>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--cor-texto-suave); margin-bottom: 12px;">
+                Basta colar o código abaixo no <strong>SQL Editor</strong> do seu Supabase Dashboard para criar as tabelas, índices de unicidade e políticas de segurança RLS:
+              </p>
+              <pre id="bloco-sql-setup" style="background-color: var(--cor-fundo); padding: 14px; border-radius: var(--raio-sm); font-size: 0.76rem; max-height: 220px; overflow-y: auto; border: 1px solid var(--cor-borda);">
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS gifts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+  image_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gift_id UUID NOT NULL REFERENCES gifts(id) ON DELETE CASCADE,
+  guest_name TEXT NOT NULL,
+  guest_whatsapp TEXT NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  cancelled_at TIMESTAMPTZ
+);
+
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.gifts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE policy_record RECORD;
+BEGIN
+  FOR policy_record IN
+    SELECT tablename, policyname FROM pg_policies
+    WHERE schemaname = 'public' AND tablename IN ('categories', 'gifts', 'reservations')
+  LOOP
+    EXECUTE format('DROP POLICY %I ON public.%I', policy_record.policyname, policy_record.tablename);
+  END LOOP;
+END $$;
+
+REVOKE ALL ON public.categories, public.gifts, public.reservations FROM anon, authenticated;
+GRANT SELECT ON public.categories, public.gifts TO anon, authenticated;
+CREATE POLICY public_read_categories ON public.categories FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY public_read_gifts ON public.gifts FOR SELECT TO anon, authenticated USING (true);
+
+CREATE OR REPLACE VIEW public.public_active_gift_reservations AS
+  SELECT DISTINCT gift_id FROM public.reservations WHERE status = 'active';
+GRANT SELECT ON public.public_active_gift_reservations TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.create_gift_reservation(
+  p_gift_id uuid,
+  p_guest_name text,
+  p_guest_whatsapp text,
+  p_message text DEFAULT ''
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  active_gift boolean;
+  created_reservation public.reservations;
+BEGIN
+  SELECT is_active INTO active_gift FROM public.gifts WHERE id = p_gift_id FOR UPDATE;
+  IF NOT FOUND OR NOT active_gift THEN
+    RAISE EXCEPTION 'Presente indisponível';
+  END IF;
+  IF length(trim(p_guest_name)) NOT BETWEEN 1 AND 120
+     OR length(trim(p_guest_whatsapp)) NOT BETWEEN 5 AND 30
+     OR length(coalesce(p_message, '')) > 1000 THEN
+    RAISE EXCEPTION 'Dados da reserva inválidos';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.reservations WHERE gift_id = p_gift_id AND status = 'active') THEN
+    RAISE EXCEPTION 'Presente já reservado' USING ERRCODE = '23505';
+  END IF;
+  INSERT INTO public.reservations (gift_id, guest_name, guest_whatsapp, message)
+  VALUES (p_gift_id, trim(p_guest_name), trim(p_guest_whatsapp), coalesce(p_message, ''))
+  RETURNING * INTO created_reservation;
+  RETURN to_jsonb(created_reservation);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.create_gift_reservation(uuid, text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.create_gift_reservation(uuid, text, text, text) TO anon, authenticated;
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             ABA 6: MINHA CONTA
+             ==================================================================== -->
+        <section id="secao-conta" class="admin-secao">
+          <div style="margin-bottom: 24px;">
+            <h2 class="titulo-serif" style="font-size: 1.8rem;">Minha Conta</h2>
+            <p style="color: var(--cor-texto-suave);">Atualize seu nome de usuário e altere a senha de acesso ao painel.</p>
+          </div>
+
+          <div style="background-color: var(--cor-superficie); padding: 32px; border-radius: var(--raio-lg); border: 1px solid var(--cor-borda); max-width: 520px;">
+            <form id="form-minha-conta">
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="conta-usuario" class="form-rotulo">Nome de Usuário</label>
+                <input type="text" id="conta-usuario" class="form-campo" required />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 18px;">
+                <label for="conta-nova-senha" class="form-rotulo">Nova Senha</label>
+                <input type="password" id="conta-nova-senha" class="form-campo" placeholder="Deixe em branco para manter a atual" />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 24px;">
+                <label for="conta-confirma-senha" class="form-rotulo">Confirmar Nova Senha</label>
+                <input type="password" id="conta-confirma-senha" class="form-campo" placeholder="Repita a nova senha" />
+              </div>
+
+              <button type="submit" class="btn btn-primario">
+                Atualizar Credenciais
+              </button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE ADICIONAR / EDITAR PRESENTE
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-admin-presente" role="dialog" aria-modal="true">
+    <div class="modal-janela" style="max-width: 600px;">
+      <div class="modal-cabecalho">
+        <h3 class="modal-titulo" id="modal-presente-titulo-janela">Cadastrar Presente</h3>
+        <button type="button" class="modal-fechar" onclick="document.getElementById('modal-admin-presente').classList.remove('aberto')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="form-admin-presente">
+        <input type="hidden" id="modal-presente-id" value="" />
+
+        <div class="modal-corpo">
+          <div class="form-grupo">
+            <label for="admin-pres-nome" class="form-rotulo">Nome do Presente <span class="form-rotulo-obrigatorio">*</span></label>
+            <input type="text" id="admin-pres-nome" class="form-campo" placeholder="Ex: Panela de Pressão" required />
+          </div>
+
+          <div class="form-grupo">
+            <label for="admin-pres-categoria" class="form-rotulo">Categoria <span class="form-rotulo-obrigatorio">*</span></label>
+            <select id="admin-pres-categoria" class="form-campo" required>
+              <option value="Cozinha">Cozinha</option>
+              <option value="Mesa e jantar">Mesa e jantar</option>
+              <option value="Eletrodomésticos">Eletrodomésticos</option>
+              <option value="Quarto">Quarto</option>
+              <option value="Banheiro">Banheiro</option>
+              <option value="Lavanderia">Lavanderia</option>
+              <option value="Limpeza">Limpeza</option>
+              <option value="Organização">Organização</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+
+          <div class="form-grupo">
+            <label for="admin-pres-descricao" class="form-rotulo">Descrição (opcional)</label>
+            <textarea id="admin-pres-descricao" class="form-campo" rows="2" placeholder="Detalhes, tamanho ou sugestão de modelo..."></textarea>
+          </div>
+
+          <!-- Seleção de Imagem (URL ou Galeria Local) -->
+          <div class="form-grupo">
+            <label class="form-rotulo">Imagem do Presente</label>
+            <div style="display: flex; gap: 16px; margin-bottom: 10px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer;">
+                <input type="radio" name="tipo_imagem" id="img-tipo-galeria" checked />
+                Selecionar da Galeria Local
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer;">
+                <input type="radio" name="tipo_imagem" id="img-tipo-url" />
+                Informar URL Externa
+              </label>
+            </div>
+
+            <!-- Box Galeria Local -->
+            <div id="box-img-galeria">
+              <span class="form-ajuda" style="margin-bottom: 6px; display: block;">Clique em uma das imagens disponíveis no repositório:</span>
+              <div class="galeria-grade" id="galeria-grade-selecao">
+                <!-- Preenchido via script.js -->
+              </div>
+            </div>
+
+            <!-- Box URL Externa -->
+            <div id="box-img-url" style="display: none;">
+              <input type="url" id="admin-pres-url" class="form-campo" placeholder="https://exemplo.com/foto-do-presente.jpg" />
+              <span class="form-ajuda">Cole o link direto da imagem na internet.</span>
+            </div>
+
+            <!-- Pré-visualização da imagem -->
+            <div style="margin-top: 10px;">
+              <img id="modal-img-preview" src="" alt="Prévia" style="width: 100px; height: 100px; object-fit: cover; border-radius: var(--raio-sm); border: 1px solid var(--cor-borda); display: none;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-rodape">
+          <button type="button" class="btn btn-secundario" onclick="document.getElementById('modal-admin-presente').classList.remove('aberto')">Cancelar</button>
+          <button type="submit" class="btn btn-primario">Salvar Presente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contêiner de Notificações Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- SDK Supabase (CDN Oficial) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Script Principal Unificado -->
+  <script src="../js/script.js"></script>
+
+</body>
+</html>

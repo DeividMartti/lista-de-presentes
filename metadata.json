@@ -1,0 +1,6 @@
+{
+  "name": "Lista de Presentes - Versão 2 Simplificada",
+  "description": "Aplicação web moderna, bonita e simplificada para lista de presentes de casa nova com Supabase e compatível com GitHub Pages.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
