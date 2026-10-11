@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS auth_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_auth_user_id_unique
+  ON public.profiles(auth_user_id) WHERE auth_user_id IS NOT NULL;
 
 -- 2. Tabela de Categorias
 CREATE TABLE IF NOT EXISTS public.categories (
@@ -65,18 +69,20 @@ DO $$
 DECLARE
   fk_record RECORD;
 BEGIN
-  -- Se houver foreign key na coluna user_id de site_settings, remove para não dar erro se referenciar tabela antiga (como app_users)
+  -- Remove referências antigas a tabelas locais de usuários.
   FOR fk_record IN (
-    SELECT tc.constraint_name
+    SELECT tc.table_name, tc.constraint_name
     FROM information_schema.table_constraints AS tc
     JOIN information_schema.key_column_usage AS kcu
       ON tc.constraint_name = kcu.constraint_name
       AND tc.table_schema = kcu.table_schema
     WHERE tc.constraint_type = 'FOREIGN KEY'
-      AND tc.table_name = 'site_settings'
+      AND tc.table_schema = 'public'
+      AND tc.table_name IN ('site_settings', 'gifts', 'reservations')
       AND kcu.column_name = 'user_id'
   ) LOOP
-    EXECUTE 'ALTER TABLE public.site_settings DROP CONSTRAINT IF EXISTS ' || quote_ident(fk_record.constraint_name);
+    EXECUTE format('ALTER TABLE public.%I DROP CONSTRAINT IF EXISTS %I',
+      fk_record.table_name, fk_record.constraint_name);
   END LOOP;
 
   -- 1. Se site_settings já existia com NOT NULL na coluna user_id, remove a restrição e seta default
@@ -119,6 +125,16 @@ BEGIN
   END IF;
 END $$;
 
+UPDATE public.gifts
+SET reserved = EXISTS (
+      SELECT 1 FROM public.reservations
+      WHERE reservations.gift_id = gifts.id AND reservations.status = 'active'
+    ),
+    is_reserved = EXISTS (
+      SELECT 1 FROM public.reservations
+      WHERE reservations.gift_id = gifts.id AND reservations.status = 'active'
+    );
+
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
@@ -144,27 +160,150 @@ END $$;
 
 REVOKE ALL ON public.profiles, public.categories, public.gifts, public.reservations, public.site_settings FROM anon, authenticated;
 GRANT SELECT ON public.categories, public.gifts, public.site_settings TO anon, authenticated;
-GRANT INSERT ON public.reservations TO anon;
+GRANT SELECT ON public.profiles, public.reservations TO authenticated;
+GRANT UPDATE (name, updated_at) ON public.profiles TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.gifts, public.site_settings TO authenticated;
 
-CREATE POLICY public_read_categories ON public.categories FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY public_read_gifts ON public.gifts FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY public_read_site_settings ON public.site_settings FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY guest_create_reservation ON public.reservations FOR INSERT TO anon
-  WITH CHECK (
-    status = 'active'
-    AND length(trim(guest_name)) BETWEEN 1 AND 120
-    AND length(trim(guest_whatsapp)) BETWEEN 5 AND 30
-    AND EXISTS (SELECT 1 FROM public.gifts WHERE gifts.id = reservations.gift_id)
+CREATE OR REPLACE FUNCTION public.is_site_admin()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE auth_user_id = auth.uid()
   );
+$$;
+REVOKE ALL ON FUNCTION public.is_site_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_site_admin() TO anon, authenticated;
+
+CREATE POLICY profile_read_self ON public.profiles
+  FOR SELECT TO authenticated USING (auth_user_id = auth.uid());
+CREATE POLICY profile_update_self ON public.profiles
+  FOR UPDATE TO authenticated
+  USING (auth_user_id = auth.uid())
+  WITH CHECK (auth_user_id = auth.uid());
+
+CREATE POLICY public_read_categories ON public.categories
+  FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY public_read_gifts ON public.gifts
+  FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY admin_manage_gifts ON public.gifts
+  FOR ALL TO authenticated
+  USING (public.is_site_admin())
+  WITH CHECK (public.is_site_admin());
+CREATE POLICY public_read_site_settings ON public.site_settings
+  FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY admin_manage_site_settings ON public.site_settings
+  FOR ALL TO authenticated
+  USING (public.is_site_admin())
+  WITH CHECK (public.is_site_admin());
+CREATE POLICY admin_read_reservations ON public.reservations
+  FOR SELECT TO authenticated
+  USING (public.is_site_admin());
+
+CREATE OR REPLACE FUNCTION public.create_guest_reservation(
+  p_gift_id TEXT,
+  p_guest_name TEXT,
+  p_guest_whatsapp TEXT,
+  p_message TEXT DEFAULT ''
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  gift_row public.gifts%ROWTYPE;
+  reservation_row public.reservations%ROWTYPE;
+BEGIN
+  IF length(trim(COALESCE(p_guest_name, ''))) NOT BETWEEN 1 AND 120
+     OR length(trim(COALESCE(p_guest_whatsapp, ''))) NOT BETWEEN 5 AND 30
+     OR length(trim(COALESCE(p_message, ''))) > 200 THEN
+    RAISE EXCEPTION 'Dados da reserva inválidos.';
+  END IF;
+
+  SELECT * INTO gift_row
+  FROM public.gifts
+  WHERE id = p_gift_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Presente não encontrado.';
+  END IF;
+  IF COALESCE(gift_row.reserved, false) OR EXISTS (
+    SELECT 1 FROM public.reservations
+    WHERE gift_id = p_gift_id AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'Este presente já foi reservado.';
+  END IF;
+
+  INSERT INTO public.reservations (
+    id, user_id, gift_id, guest_name, guest_whatsapp, message, status
+  ) VALUES (
+    gen_random_uuid()::TEXT,
+    COALESCE(gift_row.user_id, 'admin'),
+    p_gift_id,
+    trim(p_guest_name),
+    trim(p_guest_whatsapp),
+    NULLIF(trim(COALESCE(p_message, '')), ''),
+    'active'
+  ) RETURNING * INTO reservation_row;
+
+  UPDATE public.gifts SET reserved = true, is_reserved = true, updated_at = now()
+  WHERE id = p_gift_id;
+  RETURN reservation_row.id;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.create_guest_reservation(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.create_guest_reservation(TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.cancel_guest_reservation(p_reservation_id TEXT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  reservation_row public.reservations%ROWTYPE;
+BEGIN
+  IF NOT public.is_site_admin() THEN
+    RAISE EXCEPTION 'Acesso não autorizado.';
+  END IF;
+
+  SELECT * INTO reservation_row
+  FROM public.reservations
+  WHERE id = p_reservation_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Reserva não encontrada.';
+  END IF;
+
+  UPDATE public.reservations
+  SET status = 'cancelled', cancelled_at = now()
+  WHERE id = p_reservation_id AND status = 'active';
+
+  UPDATE public.gifts
+  SET reserved = EXISTS (
+        SELECT 1 FROM public.reservations
+        WHERE gift_id = reservation_row.gift_id AND status = 'active'
+      ),
+      is_reserved = EXISTS (
+        SELECT 1 FROM public.reservations
+        WHERE gift_id = reservation_row.gift_id AND status = 'active'
+      ),
+      updated_at = now()
+  WHERE id = reservation_row.gift_id;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.cancel_guest_reservation(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.cancel_guest_reservation(TEXT) TO authenticated;
 
 -- Criar configurações padrão do site (passando user_id 'admin' explicitamente para evitar erros de NOT NULL)
 INSERT INTO public.site_settings (id, user_id, site_title, hero_title, hero_description, hero_image_url)
 VALUES (1, 'admin', 'Nosso Novo Lar', 'Vamos construir esse novo capítulo juntos? 💚', 'Estamos começando uma nova etapa e montando nosso cantinho com muito carinho.', './imagens/imagem-da-capa.png')
 ON CONFLICT (id) DO UPDATE SET
-  site_title = EXCLUDED.site_title,
-  hero_title = EXCLUDED.hero_title,
-  hero_description = EXCLUDED.hero_description,
-  hero_image_url = EXCLUDED.hero_image_url,
   user_id = COALESCE(public.site_settings.user_id, 'admin'),
   updated_at = timezone('utc'::text, now());
 

@@ -1,29 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
 # Lista de presentes
 
-Aplicação de lista de presentes com painel administrativo e integração opcional com Supabase.
+Site estático de lista de presentes para GitHub Pages, com catálogo, painel administrativo e armazenamento central no Supabase. Todos os aparelhos usam o mesmo projeto; não é necessário configurar navegador por navegador.
 
-## Executar localmente
+## Publicar no GitHub Pages
 
-1. Instale o Node.js.
-2. Instale as dependências: `npm install`
-3. Copie `.env.example` para `.env` e preencha as variáveis. Não envie o arquivo `.env` ao GitHub.
-4. Inicie o servidor: `npm run dev`
+1. No Supabase, execute `supabase-setup.sql` no SQL Editor.
+2. Em **Authentication → Users**, confirme que o usuário de e-mail que administrará o painel existe.
+3. No SQL Editor, associe esse usuário ao perfil de anfitrião. Substitua o e-mail no comando abaixo pelo e-mail cadastrado no Supabase Auth:
 
-O login administrativo só é habilitado quando `ADMIN_USERNAME` e `ADMIN_PASSWORD` estão configurados. Use uma senha exclusiva com pelo menos 12 caracteres. O servidor armazena somente o hash da senha.
+   ```sql
+   INSERT INTO public.profiles (id, auth_user_id, username, name)
+   SELECT 'admin', id, email, COALESCE(raw_user_meta_data->>'name', 'Administrador')
+   FROM auth.users
+   WHERE lower(email) = lower('SEU_EMAIL_DO_SUPABASE')
+   ON CONFLICT (id) DO UPDATE SET
+     auth_user_id = EXCLUDED.auth_user_id,
+     username = EXCLUDED.username,
+     name = EXCLUDED.name;
+   ```
 
-## Configuração do Supabase
+   Execute e confirme que uma linha foi inserida ou atualizada.
+4. No GitHub, abra **Settings → Secrets and variables → Actions → New repository secret** e crie:
+   - `VITE_SUPABASE_URL`: URL do projeto Supabase.
+   - `VITE_SUPABASE_ANON_KEY`: chave pública `anon` do projeto.
+5. Em **Settings → Pages**, selecione **GitHub Actions** como origem da publicação.
+6. Envie as alterações para a branch `main`. O workflow `.github/workflows/deploy-pages.yml` compila e publica o site.
 
-1. Execute `supabase-setup.sql` no SQL Editor do projeto Supabase.
-2. Configure `SUPABASE_URL` e `SUPABASE_ANON_KEY` para a leitura pública do catálogo e das configurações.
-3. Configure `SUPABASE_SERVICE_ROLE_KEY` como segredo **somente no servidor** para as gravações administrativas. Nunca a coloque no código do navegador nem em arquivos versionados.
+O workflow precisa desses dois segredos para gerar a publicação. A chave `anon`/pública é usada no navegador e é protegida pelas políticas RLS do SQL. **Nunca** use `service_role` ou qualquer chave secreta no site, no `.env` com prefixo `VITE_` ou no GitHub Pages.
 
-O SQL remove as permissões antigas e a coluna `profiles.password`, que armazenava senhas em texto simples. O acesso anônimo pode ler catálogo/configurações e inserir reservas; não pode listar reservas nem modificar presentes, usuários ou configurações.
+## Funcionamento e segurança
 
-Se as credenciais padrão `admin/admin` já foram usadas ou publicadas, troque-as e execute a migração SQL no Supabase. A atualização não substitui a execução dessa migração no banco remoto.
+- Os convidados leem o catálogo e criam reservas no mesmo Supabase.
+- Somente uma conta autenticada no Supabase Auth e vinculada à tabela `profiles` pode alterar presentes, configurações ou consultar reservas.
+- A criação de reserva é feita por uma função SQL transacional: o presente não pode ser reservado duas vezes ao mesmo tempo.
+- O site não confirma a reserva se o Supabase rejeitar a gravação; o erro é exibido para o visitante.
+- O projeto não grava mais credenciais Supabase nem cópias de reservas/presentes no armazenamento local do navegador.
+
+## Desenvolvimento local
+
+1. Instale Node.js 22 ou superior.
+2. Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+3. Execute `npm install` e `npm run dev`.
 
 ## Verificação
 

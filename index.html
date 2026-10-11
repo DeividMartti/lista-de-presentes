@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="supabase-url" content="%VITE_SUPABASE_URL%" />
+  <meta name="supabase-anon-key" content="%VITE_SUPABASE_ANON_KEY%" />
   <title>Lista de Presentes - Versão 2 Simplificada</title>
   <meta name="description" content="Aplicação web moderna, bonita e simplificada para lista de presentes de casa nova com Supabase e compatível com GitHub Pages." />
   <meta property="og:title" content="Lista de Presentes - Versão 2 Simplificada" />
@@ -1640,6 +1642,7 @@
   </style>
 </head>
 <body>
+  <div id="supabase-connection-error" role="alert" style="display:none; position:fixed; z-index:1000; top:12px; left:12px; right:12px; padding:12px 16px; border:1px solid #F5C2C7; border-radius:10px; background:#FDEDED; color:#842029; font-size:14px;"></div>
 
   <!-- ========================================================================
        VIEWPORT DO APLICATIVO
@@ -2000,25 +2003,25 @@
               </svg>
             </div>
             <h1 class="login-card-titulo titulo-serif">Área dos Anfitriões</h1>
-            <p class="login-card-subtitulo">Informe seu usuário e senha para gerenciar seus presentes e reservas.</p>
+            <p class="login-card-subtitulo">Entre com o e-mail e a senha cadastrados no Supabase para gerenciar presentes e reservas.</p>
           </div>
 
           <form id="form-login-admin" onsubmit="event.preventDefault(); window.appAdmin.executarLogin();" class="login-form-corpo">
             <div id="login-admin-erro" class="login-erro-alerta" style="display: none;"></div>
 
             <div class="form-grupo">
-              <label for="login-admin-user" class="form-rotulo">Usuário</label>
+              <label for="login-admin-user" class="form-rotulo">E-mail</label>
               <div class="campo-com-icone">
                 <svg class="campo-icone-lateral" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <input 
-                  type="text" 
-                  id="login-admin-user" 
-                  class="form-input" 
-                  placeholder="Seu usuário" 
-                  required 
+                <input
+                  type="email"
+                  id="login-admin-user"
+                  class="form-input"
+                  placeholder="seu@email.com"
+                  required
                   autocomplete="username"
                 />
               </div>
@@ -2253,8 +2256,8 @@
                 <input type="text" id="admin-cfg-nome" class="form-input" style="padding-left: 14px;" placeholder="Ex: Casal Lucas & Marina" required />
               </div>
               <div class="form-grupo">
-                <label class="form-rotulo">Nome de Usuário (login)</label>
-                <input type="text" id="admin-cfg-user" class="form-input" style="padding-left: 14px;" required />
+                <label class="form-rotulo">E-mail de acesso (gerenciado no Supabase)</label>
+                <input type="email" id="admin-cfg-user" class="form-input" style="padding-left: 14px;" readonly />
               </div>
               <div class="form-grupo">
                 <label class="form-rotulo">Nova Senha</label>
@@ -2271,18 +2274,21 @@
           <div id="admin-aba-supabase" class="admin-aba-painel" style="display: none;">
             <h2 class="catalogo-titulo titulo-serif" style="font-size: 1.5rem; margin-bottom: 6px;">Integração Supabase & Banco de Dados</h2>
             <p style="font-size: 0.88rem; color: var(--texto-suave); margin-bottom: 16px;">
-              Conecte seu projeto Supabase para que os usuários, presentes e reservas fiquem sincronizados na nuvem entre qualquer dispositivo.
+              O site usa uma conexão Supabase central configurada na publicação do GitHub Pages; não é necessário configurar cada aparelho.
+            </p>
+            <p style="font-size: 0.88rem; color: var(--texto-suave); margin-bottom: 16px; line-height: 1.6;">
+              A URL do projeto e a chave pública são definidas nos segredos do GitHub. Nunca coloque a chave privada <strong>service_role</strong> no site.
             </p>
 
             <div style="background: #FFFFFF; border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); padding: 18px; margin-bottom: 20px; max-width: 100%; box-sizing: border-box; overflow: hidden;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
                 <span style="font-size: 0.92rem; font-weight: 600;">Status da Conexão:</span>
                 <span id="admin-supabase-status-tag" style="padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; background: var(--verde-claro-fundo); color: var(--verde-escuro);">
-                  Modo Local Seguro
+                  Conexão configurada na publicação
                 </span>
               </div>
 
-              <form id="form-supabase-cfg" onsubmit="event.preventDefault(); window.appAdmin.salvarSupabase();" style="display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 100%; box-sizing: border-box;">
+              <form id="form-supabase-cfg" onsubmit="event.preventDefault(); window.appAdmin.salvarSupabase();" style="display: none;">
                 <div class="form-grupo">
                   <label class="form-rotulo">Project URL do Supabase</label>
                   <input type="url" id="admin-sb-url" class="form-input" style="padding-left: 14px; width: 100%; box-sizing: border-box;" placeholder="https://seu-projeto.supabase.co" />
